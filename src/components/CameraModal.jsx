@@ -10,6 +10,7 @@ export default function CameraModal({ camera, onClose, onSave }) {
     location: "",
     description: "",
     type: 1, // IP = 1
+    streamUrl: "", // ✅ Thêm field StreamUrl
   });
   const [error, setError] = useState("");
 
@@ -24,6 +25,7 @@ export default function CameraModal({ camera, onClose, onSave }) {
         location: camera.location || "",
         description: camera.description || "",
         type: typeof camera.type === "number" ? camera.type : 1,
+        streamUrl: camera.streamUrl || "", // ✅ load StreamUrl
       });
     }
   }, [camera]);
@@ -40,14 +42,13 @@ export default function CameraModal({ camera, onClose, onSave }) {
     e.preventDefault();
     setError("");
 
-    // Validate frontend
     if (!form.name || !form.ipAddress) {
       setError("Name và IP Address là bắt buộc.");
       return;
     }
 
     try {
-      await onSave(form);  // backend lỗi sẽ hiển thị modal, không crash
+      await onSave(form);
     } catch (err) {
       let message = err.message || "Failed to save camera";
       setError(message);
@@ -68,6 +69,7 @@ export default function CameraModal({ camera, onClose, onSave }) {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Name */}
           <div>
             <label className="block text-sm text-gray-300 mb-1">Name</label>
             <input
@@ -80,6 +82,7 @@ export default function CameraModal({ camera, onClose, onSave }) {
             />
           </div>
 
+          {/* IP & Port */}
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm text-gray-300 mb-1">IP Address</label>
@@ -106,6 +109,7 @@ export default function CameraModal({ camera, onClose, onSave }) {
             </div>
           </div>
 
+          {/* Username & Password */}
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm text-gray-300 mb-1">Username</label>
@@ -129,6 +133,7 @@ export default function CameraModal({ camera, onClose, onSave }) {
             </div>
           </div>
 
+          {/* Location */}
           <div>
             <label className="block text-sm text-gray-300 mb-1">Location</label>
             <input
@@ -140,6 +145,7 @@ export default function CameraModal({ camera, onClose, onSave }) {
             />
           </div>
 
+          {/* Description */}
           <div>
             <label className="block text-sm text-gray-300 mb-1">Description</label>
             <textarea
@@ -150,6 +156,20 @@ export default function CameraModal({ camera, onClose, onSave }) {
             />
           </div>
 
+          {/* ✅ StreamUrl */}
+          <div>
+            <label className="block text-sm text-gray-300 mb-1">Stream URL</label>
+            <input
+              type="text"
+              name="streamUrl"
+              value={form.streamUrl}
+              onChange={handleChange}
+              className="w-full px-3 py-2 rounded-lg bg-gray-700 text-white"
+              placeholder="rtsp://..."
+            />
+          </div>
+
+          {/* Camera Type */}
           <div>
             <label className="block text-sm text-gray-300 mb-1">Camera Type</label>
             <select
@@ -165,6 +185,7 @@ export default function CameraModal({ camera, onClose, onSave }) {
             </select>
           </div>
 
+          {/* Actions */}
           <div className="flex justify-end gap-2 pt-4">
             <button
               type="button"
