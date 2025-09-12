@@ -13,3 +13,27 @@ If you are developing a production application, we recommend using TypeScript wi
 
 #run
 npm run dev
+
+```
+SmartCamera.WebAppDemo/
+├── src/
+│   ├── components/
+│   │   ├── VideoFeed.jsx           # Hiển thị video trực tiếp với lớp phủ AI
+│   │   ├── MetricCard.jsx          # Thẻ hiển thị các chỉ số, thông tin
+│   │   ├── CameraControlPanel.jsx  # Bảng điều khiển camera và các chức năng AI
+│   │   ├── CameraModal.jsx         # Modal để thêm hoặc chỉnh sửa camera
+│   │   └── CameraCard.jsx          # Thẻ hiển thị thông tin tóm tắt của một camera
+│   │
+│   ├── pages/
+│   │   ├── Dashboard.jsx           # Trang tổng quan (Dashboard)
+│   │   └── CameraList.jsx          # Trang quản lý danh sách camera
+│   │
+│   ├── services/
+│   │   └── apiClient.js            # Cấu hình và quản lý các API call bằng axios
+│   │
+│   └── App.jsx                     # Component gốc của ứng dụng
+│
+├── package.json
+├── vite.config.js
+└── tailwind.config.js
+```
