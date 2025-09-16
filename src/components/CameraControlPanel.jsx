@@ -1,6 +1,6 @@
 // src/components/CameraControlPanel.jsx
 import React from 'react';
-import { Settings, Play, Pause, Brain } from 'lucide-react';
+import { Settings, Play, Pause, Brain, Trash2 } from 'lucide-react';
 
 const StatusBadge = ({ status, aiEnabled = false }) => {
   const getStatusColor = () => {
@@ -20,7 +20,7 @@ const StatusBadge = ({ status, aiEnabled = false }) => {
   );
 };
 
-const CameraControlPanel = ({ cameras, onAddCamera, onToggleCamera, onToggleAI, onEditCamera }) => {
+const CameraControlPanel = ({ cameras, onAddCamera, onToggleCamera, onToggleAI, onEditCamera, onDeleteCamera }) => {
   const handleToggleCamera = (cameraId) => {
     if (onToggleCamera) {
       onToggleCamera(cameraId);
@@ -30,6 +30,12 @@ const CameraControlPanel = ({ cameras, onAddCamera, onToggleCamera, onToggleAI, 
   const handleToggleAI = (cameraId) => {
     if (onToggleAI) {
       onToggleAI(cameraId);
+    }
+  };
+
+  const handleDeleteCamera = (cameraId) => {
+    if (onDeleteCamera) {
+      onDeleteCamera(cameraId);
     }
   };
 
@@ -85,6 +91,13 @@ const CameraControlPanel = ({ cameras, onAddCamera, onToggleCamera, onToggleAI, 
                 className="px-3 py-1 bg-gray-600 hover:bg-gray-700 rounded text-xs font-medium transition-colors"
               >
                 Edit
+              </button>
+              <button
+                onClick={() => handleDeleteCamera(camera.id)}
+                className="flex items-center gap-1 px-3 py-1 bg-red-600 hover:bg-red-700 rounded text-xs font-medium transition-colors"
+              >
+                <Trash2 className="w-3 h-3" />
+                Delete
               </button>
             </div>
           </div>

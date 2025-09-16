@@ -13,7 +13,7 @@ export default function Dashboard({ user, token, onLogout }) {
   const [error, setError] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
   const [editingCamera, setEditingCamera] = useState(null);
-  
+
   // Enhanced state for AI features
   const [systemMetrics, setSystemMetrics] = useState({
     detections: 0,
@@ -26,7 +26,7 @@ export default function Dashboard({ user, token, onLogout }) {
     setError("");
     try {
       const cams = await api.getCameras(token);
-      
+
       // Enhance camera data with AI features if not present
       const enhancedCameras = cams.map(cam => ({
         ...cam,
@@ -35,19 +35,19 @@ export default function Dashboard({ user, token, onLogout }) {
         detections: cam.detections || Math.floor(Math.random() * 50),
         model: cam.model || 'YOLO v8'
       }));
-      
+
       setCameras(enhancedCameras);
-      
+
       // Update system metrics
       const activeStreams = enhancedCameras.filter(c => c.status === 'online').length;
       const totalDetections = enhancedCameras.reduce((sum, cam) => sum + (cam.detections || 0), 0);
-      
+
       setSystemMetrics({
         detections: totalDetections,
         systemLoad: Math.floor(Math.random() * 30 + 15),
         uptime: 99.8
       });
-      
+
     } catch (err) {
       setError("⚠️ Cannot connect to API. Please check backend server.");
       console.error(err);
@@ -67,7 +67,7 @@ export default function Dashboard({ user, token, onLogout }) {
         detections: prev.detections + Math.floor(Math.random() * 3)
       }));
     }, 5000);
-    
+
     return () => clearInterval(interval);
   }, [token]);
 
@@ -101,16 +101,16 @@ export default function Dashboard({ user, token, onLogout }) {
 
   // Enhanced camera controls
   const handleToggleCamera = (cameraId) => {
-    setCameras(prev => prev.map(cam => 
-      cam.id === cameraId 
+    setCameras(prev => prev.map(cam =>
+      cam.id === cameraId
         ? { ...cam, status: cam.status === 'online' ? 'offline' : 'online' }
         : cam
     ));
   };
 
   const handleToggleAI = (cameraId) => {
-    setCameras(prev => prev.map(cam => 
-      cam.id === cameraId 
+    setCameras(prev => prev.map(cam =>
+      cam.id === cameraId
         ? { ...cam, aiEnabled: !cam.aiEnabled }
         : cam
     ));
@@ -215,7 +215,7 @@ export default function Dashboard({ user, token, onLogout }) {
                 <Camera className="w-5 h-5" />
                 Live Video Feeds
               </h2>
-              
+
               {cameras.length === 0 ? (
                 <div className="text-center py-12 text-gray-400">
                   <Camera className="w-16 h-16 mx-auto mb-4 opacity-50" />
@@ -246,6 +246,7 @@ export default function Dashboard({ user, token, onLogout }) {
               onToggleCamera={handleToggleCamera}
               onToggleAI={handleToggleAI}
               onEditCamera={handleEditCamera}
+              onDeleteCamera={handleDeleteCamera}
             />
 
             {/* AI Configuration Panel */}
