@@ -1,11 +1,13 @@
 // src/pages/Dashboard.jsx
 import React, { useEffect, useState } from "react";
-import { LogOut, Users, Activity, Camera, Settings, Eye, Brain, Zap } from "lucide-react";
+import { LogOut, Users, Activity, Camera, Settings, Eye, Brain, Zap, Wifi, WifiOff } from "lucide-react";
 import { api } from "../services/api";
 import CameraModal from "../components/CameraModal";
 import VideoFeed from "../components/VideoFeed";
+import EnhancedVideoFeed from "../components/EnhancedVideoFeed";
 import MetricCard from "../components/MetricCard";
 import CameraControlPanel from "../components/CameraControlPanel";
+import { useRealTimeDetections } from "../hooks/useRealTimeDetections";
 
 export default function Dashboard({ user, token, onLogout }) {
   const [cameras, setCameras] = useState([]);
@@ -13,6 +15,14 @@ export default function Dashboard({ user, token, onLogout }) {
   const [error, setError] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
   const [editingCamera, setEditingCamera] = useState(null);
+
+  // Real-time detection system
+  const { 
+    isConnected: signalRConnected, 
+    alerts, 
+    getTotalDetections,
+    clearAlerts 
+  } = useRealTimeDetections(token);
 
   // Enhanced state for AI features
   const [systemMetrics, setSystemMetrics] = useState({
@@ -42,11 +52,12 @@ export default function Dashboard({ user, token, onLogout }) {
       const activeStreams = enhancedCameras.filter(c => c.status === 'online').length;
       const totalDetections = enhancedCameras.reduce((sum, cam) => sum + (cam.detections || 0), 0);
 
-      setSystemMetrics({
+      setSystemMetrics(prev => ({
+        ...prev,
         detections: totalDetections,
         systemLoad: Math.floor(Math.random() * 30 + 15),
         uptime: 99.8
-      });
+      }));
 
     } catch (err) {
       setError("⚠️ Cannot connect to API. Please check backend server.");
@@ -56,15 +67,25 @@ export default function Dashboard({ user, token, onLogout }) {
     }
   };
 
+  // Update system metrics with real-time data
+  useEffect(() => {
+    const realTimeDetections = getTotalDetections();
+    if (realTimeDetections > 0) {
+      setSystemMetrics(prev => ({
+        ...prev,
+        detections: realTimeDetections
+      }));
+    }
+  }, [getTotalDetections]);
+
   useEffect(() => {
     fetchData();
     // Set up periodic refresh for real-time feel
     const interval = setInterval(() => {
-      // Update metrics without full refresh
+      // Update system metrics without full refresh
       setSystemMetrics(prev => ({
         ...prev,
-        systemLoad: Math.floor(Math.random() * 30 + 15),
-        detections: prev.detections + Math.floor(Math.random() * 3)
+        systemLoad: Math.floor(Math.random() * 30 + 15)
       }));
     }, 5000);
 
@@ -149,6 +170,20 @@ export default function Dashboard({ user, token, onLogout }) {
             <h1 className="text-2xl font-bold flex items-center gap-2">
               <Brain className="w-8 h-8 text-blue-400" />
               SmartCamera Dashboard
+              {/* SignalR Connection Status */}
+              <div className="flex items-center ml-4">
+                {signalRConnected ? (
+                  <div className="flex items-center gap-1 text-green-400 text-sm">
+                    <Wifi className="w-4 h-4" />
+                    <span>Live</span>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-1 text-red-400 text-sm">
+                    <WifiOff className="w-4 h-4" />
+                    <span>Offline</span>
+                  </div>
+                )}
+              </div>
             </h1>
             <p className="text-gray-400 text-sm">AI-powered video monitoring system</p>
           </div>
@@ -214,6 +249,12 @@ export default function Dashboard({ user, token, onLogout }) {
               <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
                 <Camera className="w-5 h-5" />
                 Live Video Feeds
+                {signalRConnected && (
+                  <div className="ml-auto flex items-center gap-2 text-sm text-green-400">
+                    <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                    Real-time AI Detection
+                  </div>
+                )}
               </h2>
 
               {cameras.length === 0 ? (
@@ -231,7 +272,12 @@ export default function Dashboard({ user, token, onLogout }) {
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {cameras.map(camera => (
-                    <VideoFeed key={camera.id} camera={camera} />
+                    // Use EnhancedVideoFeed if SignalR is connected, otherwise fallback to VideoFeed
+                    signalRConnected ? (
+                      <EnhancedVideoFeed key={camera.id} camera={camera} />
+                    ) : (
+                      <VideoFeed key={camera.id} camera={camera} />
+                    )
                   ))}
                 </div>
               )}
@@ -314,11 +360,67 @@ export default function Dashboard({ user, token, onLogout }) {
                   <span className="text-gray-400">System Health:</span>
                   <span className="text-green-400 font-medium">Optimal</span>
                 </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-400">SignalR Status:</span>
+                  <span className={signalRConnected ? "text-green-400" : "text-red-400"}>
+                    {signalRConnected ? "Connected" : "Disconnected"}
+                  </span>
+                </div>
               </div>
             </div>
+
+            {/* Real-time Alerts Panel */}
+            {alerts && alerts.length > 0 && (
+              <div className="bg-red-900/30 backdrop-blur-sm border border-red-700 rounded-lg p-6">
+                <div className="flex justify-between items-center mb-4">
+                  <h4 className="text-lg font-semibold text-red-300">🚨 Active Alerts</h4>
+                  <button 
+                    onClick={clearAlerts}
+                    className="text-red-400 hover:text-red-300 text-sm underline"
+                  >
+                    Clear All
+                  </button>
+                </div>
+                <div className="space-y-2 max-h-48 overflow-y-auto custom-scrollbar">
+                  {alerts.slice(-5).reverse().map(alert => (
+                    <div 
+                      key={alert.id}
+                      className="bg-red-800/50 border border-red-600 rounded p-3 text-sm"
+                    >
+                      <div className="font-bold text-red-200">{alert.type}</div>
+                      <div className="text-red-300">Camera: {alert.cameraId}</div>
+                      <div className="text-red-400 text-xs">
+                        {alert.timestamp.toLocaleTimeString()}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </main>
+
+      {/* Floating Notifications */}
+      {alerts && alerts.length > 0 && (
+        <div className="fixed top-20 right-4 z-50 space-y-2 max-w-sm">
+          {alerts.slice(-3).map(alert => (
+            <div 
+              key={alert.id}
+              className="bg-red-600/95 backdrop-blur-sm text-white p-4 rounded-lg shadow-xl border border-red-500 animate-slide-in-right"
+            >
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 bg-red-300 rounded-full animate-pulse"></div>
+                <div className="font-bold">🚨 {alert.type}</div>
+              </div>
+              <div className="text-sm mt-1">Camera: {alert.cameraId}</div>
+              <div className="text-xs opacity-75 mt-1">
+                {alert.timestamp.toLocaleTimeString()}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Camera Modal */}
       {modalOpen && (
